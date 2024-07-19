@@ -1,0 +1,39 @@
+version: '3.4'
+
+networks:
+  webapinetwork:
+volumes:
+  sqlserverdata:
+services:
+  sqldb:
+    container_name: sqldb
+    image: mcr.microsoft.com/mssql/server:2022-latest
+    ports:
+      - 8002:1433
+    environment:
+      ACCEPT_EULA: "Y"
+      SA_PASSWORD: "YourStrong@Passw0rd"
+      MSSQL_PID: Express
+    networks:
+      - webapinetwork
+    volumes:
+      - sqlserverdata:/var/opt/mssql
+
+  webdockerapi:
+    container_name: webdockerapi-container
+    image: ${DOCKER_REGISTRY-}webdockerapi
+    build:
+      context: .
+      dockerfile: WebDockerAPI/Dockerfile
+    ports:
+      - 8001:80
+    depends_on:
+      - sqldb
+    environment:
+      - DB_HOST=sqldb
+      - DB_NAME=pokemon
+      - DB_USER=sa
+      - DB_SA_PASSWORD=YourStrong@Passw0rd
+      - DB_BASEPORT=1433
+    networks:
+      - webapinetwork
